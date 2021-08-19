@@ -1,4 +1,4 @@
-module bot
+module github.com/tdf1939/ZeroBot-Plugin-HS
 
 go 1.16
 
