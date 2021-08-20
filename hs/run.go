@@ -1,7 +1,7 @@
 package hs
 
 import (
-	"bot/img"
+	"github.com/tdf1939/img"
 	"encoding/base64"
 	"fmt"
 	"os"
