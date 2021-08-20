@@ -1,6 +1,9 @@
 package hs
 
 import (
+	"bot/img"
+	"encoding/base64"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -10,26 +13,6 @@ import (
 	"github.com/wdvxdr1123/ZeroBot/message"
 )
 
-var hs = `https://hs.fbigame.com/ajax.php`
-
-var param = req.Param{
-	"mod":          `get_cards_list`,
-	"mode":         `-1`,
-	"extend":       `-1`,
-	"mutil_extend": ``,
-	"hero":         `-1`,
-	"rarity":       `-1`,
-	"cost":         `-1`,
-	"mutil_cost":   ``,
-	"techlevel":    `-1`,
-	"type":         `-1`,
-	"collectible":  `-1`,
-	"isbacon":      `-1`,
-	"page":         `1`,
-	"search_type":  `1`,
-	"deckmode":     "normal",
-	"hash":         "7f7b68fc",
-}
 var header = req.Header{
 	"user-agent": `Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36`,
 	"referer":    `https://hs.fbigame.com`,
@@ -39,8 +22,7 @@ func init() {
 	zero.OnRegex(`^搜卡(.+)$`).
 		SetBlock(true).SetPriority(20).Handle(func(ctx *zero.Ctx) {
 		List := ctx.State["regex_matched"].([]string)[1]
-		r, _ := req.Get(hs, header, param, req.Param{"search": List})
-		g := r.String()
+		g := sh(List)
 		im, _ := req.Get(`https://res.fbigame.com/hs/v13/`+
 			gjson.Get(g, `list.0.CardID`).String()+
 			`.png?auth_key=`+
@@ -67,4 +49,62 @@ func init() {
 			message.Text(tx),
 		)
 	})
+	//卡组
+	zero.OnRegex(`^[\s\S]*?(AAE[a-zA-Z0-9/\+=]{70,})[\s\S]*$`).
+		SetBlock(true).SetPriority(20).Handle(func(ctx *zero.Ctx) {
+		fmt.Print("成功")
+		List := ctx.State["regex_matched"].([]string)[1]
+		ctx.SendChain(
+			message.Image(kz(List)),
+		)
+	})
+}
+
+func sh(s string) string {
+	var hs = `https://hs.fbigame.com/ajax.php`
+	var param = req.Param{
+		"mod":          `get_cards_list`,
+		"mode":         `-1`,
+		"extend":       `-1`,
+		"mutil_extend": ``,
+		"hero":         `-1`,
+		"rarity":       `-1`,
+		"cost":         `-1`,
+		"mutil_cost":   ``,
+		"techlevel":    `-1`,
+		"type":         `-1`,
+		"collectible":  `-1`,
+		"isbacon":      `-1`,
+		"page":         `1`,
+		"search_type":  `1`,
+		"deckmode":     "normal",
+		"hash":         "7f7b68fc",
+	}
+	r, _ := req.Get(hs, header, param, req.Param{"search": s})
+	return r.String()
+}
+
+func kz(s string) string {
+	c, _ := req.Get("https://hs.fbigame.com/decks.php", req.Param{"deck_code": s})
+	kzheader := req.Header{
+		"user-agent": `Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36`,
+		"referer":    c.Request().URL.String(),
+	}
+	param := req.Param{
+		"mod":       `general_deck_image`,
+		"deck_code": s,
+		"deck_text": ``,
+		"hash":      `57c5fdaf`,
+	}
+
+	r, _ := req.Get(`https://hs.fbigame.com/ajax.php`, kzheader, param)
+	im := gjson.Get(r.String(), "img").String()
+	//解压
+	dist, _ := base64.StdEncoding.DecodeString(im)
+	//写入新文件
+	f, _ := os.OpenFile("xx.png", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	defer f.Close()
+	f.Write(dist)
+
+	return img.SGpic("xx.png")
 }
