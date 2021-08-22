@@ -89,28 +89,14 @@ func sh(s string) string {
 }
 
 func kz(s string) string {
-	c, _ := req.Get("https://hs.fbigame.com/decks.php", req.Param{"deck_code": s})
-	h, _ := req.Get("https://hs.fbigame.com", header)
-
-	kzheader := req.Header{
-		"user-agent": `Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36`,
-		"referer":    c.Request().URL.String(),
-	}
+	h, _ := req.Get("https://hs.fbigame.com")
 	param := req.Param{
 		"mod":       `general_deck_image`,
 		"deck_code": s,
 		"deck_text": ``,
 		"hash":      strings.SplitN(strings.SplitN(h.String(), `var hash = "`, 2)[1], `"`, 2)[0],
 	}
-
-	r, _ := req.Get(`https://hs.fbigame.com/ajax.php`, kzheader, param)
+	r, _ := req.Get(`https://hs.fbigame.com/ajax.php`, param, h.Request().Header)
 	im := gjson.Get(r.String(), "img").String()
-	//解压
-	dist, _ := base64.StdEncoding.DecodeString(im)
-	//写入新文件
-	f, _ := os.OpenFile("xx.png", os.O_RDWR|os.O_CREATE, os.ModePerm)
-	defer f.Close()
-	f.Write(dist)
-
-	return img.SGpic("xx.png")
+	return `base64://` + im
 }
