@@ -41,8 +41,11 @@ func init() {
 			return
 		}
 		for i := 0; i < t && i < 10; i++ {
-			tx += strconv.Itoa(i+1) + ". " +
-				gjson.Get(g, `list.`+strconv.Itoa(i)+`.CARDNAME`).String() + "\n"
+			tx += strconv.Itoa(i+1) + ". 法力：" +
+				gjson.Get(g, `list.`+strconv.Itoa(i)+`.COST`).String() +
+				" " +
+				gjson.Get(g, `list.`+strconv.Itoa(i)+`.CARDNAME`).String() +
+				"\n"
 		}
 		ctx.SendChain(
 			message.Image(sg.String()),
@@ -62,6 +65,7 @@ func init() {
 
 func sh(s string) string {
 	var hs = `https://hs.fbigame.com/ajax.php`
+	h, _ := req.Get("https://hs.fbigame.com", header)
 	var param = req.Param{
 		"mod":          `get_cards_list`,
 		"mode":         `-1`,
@@ -78,7 +82,7 @@ func sh(s string) string {
 		"page":         `1`,
 		"search_type":  `1`,
 		"deckmode":     "normal",
-		"hash":         "7f7b68fc",
+		"hash":         strings.SplitN(strings.SplitN(h.String(), `var hash = "`, 2)[1], `"`, 2)[0],
 	}
 	r, _ := req.Get(hs, header, param, req.Param{"search": s})
 	return r.String()
@@ -86,6 +90,8 @@ func sh(s string) string {
 
 func kz(s string) string {
 	c, _ := req.Get("https://hs.fbigame.com/decks.php", req.Param{"deck_code": s})
+	h, _ := req.Get("https://hs.fbigame.com", header)
+
 	kzheader := req.Header{
 		"user-agent": `Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36`,
 		"referer":    c.Request().URL.String(),
@@ -94,7 +100,7 @@ func kz(s string) string {
 		"mod":       `general_deck_image`,
 		"deck_code": s,
 		"deck_text": ``,
-		"hash":      `57c5fdaf`,
+		"hash":      strings.SplitN(strings.SplitN(h.String(), `var hash = "`, 2)[1], `"`, 2)[0],
 	}
 
 	r, _ := req.Get(`https://hs.fbigame.com/ajax.php`, kzheader, param)
