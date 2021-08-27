@@ -12,3 +12,7 @@
 
 
 数据来源：https://hs.fbigame.com/
+
+## 其他插件推荐：
+1. ZeroBot实用插件合集：https://github.com/FloatTech/ZeroBot-Plugin
+2. 沙雕gif生成插件：https://github.com/tdf1939/ZeroBot-Plugin-Gif
